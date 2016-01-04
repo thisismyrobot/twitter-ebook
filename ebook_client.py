@@ -1,8 +1,10 @@
 """ eBook engine.
 """
 from settings import *
+from textstat.textstat import textstat
 
 import collections
+import HTMLParser
 import operator
 import random
 import re
@@ -18,7 +20,7 @@ def tidy(tweet):
                       in tweet.split(' ')
                       if not word.startswith('http')])
     tweet = ' '.join(filter(None, tweet.split(' ')))
-    return tweet
+    return HTMLParser.HTMLParser().unescape(tweet)
 
 
 def normalise(word):
@@ -28,36 +30,16 @@ def normalise(word):
     return word.lower()
 
 
-def update():
-    """ Tweet!
+def new_tweet(corpus):
+    """ Produce a sentence from a corpus (list of sentences).
     """
-    # Connect.
-    api = twitter.Api(
-        CONSUMER_KEY,
-        CONSUMER_SECRET,
-        ACCESS_TOKEN,
-        ACCESS_TOKEN_SECRET,
-    )
-
-    # Get history from source account.
-    history = map(
-        tidy,
-        map(
-            operator.attrgetter('text'),
-            api.GetUserTimeline(
-                screen_name=SOURCE_ACCOUNT, count=200, include_rts=False,
-                trim_user=True, exclude_replies=True
-            )
-        )
-    )
-
     # Markov it
     starters = [tweet.split(' ')[0]
                 for tweet
-                in history]
+                in corpus]
 
     freq = collections.defaultdict(list)
-    for tw in history:
+    for tw in corpus:
         words = tidy(tw).split(' ')
         for (i, word) in enumerate(words[1:], 1):
             freq[normalise(words[i-1])].append(word)
@@ -93,8 +75,46 @@ def update():
     tweet = re.sub(r'[,:]$', '', tweet)
     tweet = re.sub(r'([^!?.()])$', r'\1.', tweet)
 
-    # Post away!
-    api.PostUpdate(tweet)
+    return tweet
+
+
+def update():
+    """ Tweet!
+    """
+    # Connect.
+    api = twitter.Api(
+        CONSUMER_KEY,
+        CONSUMER_SECRET,
+        ACCESS_TOKEN,
+        ACCESS_TOKEN_SECRET,
+    )
+
+    # Get history from source account.
+    history = map(
+        tidy,
+        map(
+            operator.attrgetter('text'),
+            api.GetUserTimeline(
+                screen_name=SOURCE_ACCOUNT, count=200, include_rts=False,
+                trim_user=True, exclude_replies=True
+            )
+        )
+    )
+
+    efforts = 0
+    tweet = ''
+    while efforts < 100:
+        tweet = new_tweet(history)
+        if textstat.gunning_fog(tweet) > 6:
+
+            print tweet
+
+            # Post away!
+            api.PostUpdate(tweet)
+            break
+
+        efforts += 1
+
 
 
 if __name__ == '__main__':
