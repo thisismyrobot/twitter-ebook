@@ -15,10 +15,11 @@ def tidy(tweet):
     """ Tidy a tweet.
     """
     tweet = tweet.encode('ascii', 'ignore')
-    tweet = ' '.join([re.sub(r'[*"]', '', word)
+    tweet = ' '.join([re.sub(r'[*"@]', '', word)
                       for word
                       in tweet.split(' ')
-                      if not word.startswith('http')])
+                      if not (word.startswith('http')
+                              or word.startswith('@'))])
     tweet = ' '.join(filter(None, tweet.split(' ')))
     return HTMLParser.HTMLParser().unescape(tweet)
 
