@@ -90,16 +90,20 @@ def update():
     )
 
     # Get history from source account.
-    history = map(
-        tidy,
-        map(
-            operator.attrgetter('text'),
-            api.GetUserTimeline(
-                screen_name=SOURCE_ACCOUNT, count=200, include_rts=False,
-                trim_user=True, exclude_replies=True
-            )
+    history = []
+    max_id = None
+    while True:
+        page = api.GetUserTimeline(
+            screen_name=SOURCE_ACCOUNT, max_id=max_id, count=200,
+            include_rts=False, trim_user=True, exclude_replies=True
         )
-    )
+
+        # Indicates no more history
+        if len(page) == 0:
+            break
+
+        max_id = page[-1].id
+        history.extend(map(tidy, map(operator.attrgetter('text'), page)))
 
     efforts = 0
     tweet = ''
