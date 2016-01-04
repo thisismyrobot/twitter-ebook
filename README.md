@@ -4,7 +4,7 @@ More of an excuse to learn about Markov Chains.
 
 Inspired (and heavily based upon): https://github.com/glasnt/ebooks_aas
 
-This one's occaisionally running at [@thisisyourobot](https://twitter/thisisyourrobot)
+This one's occaisionally running at [@thisisyourobot](https://twitter.com/thisisyourrobot)
 
 ## Setup
 
