@@ -53,7 +53,6 @@ def new_tweet(corpus):
             word = random.choice(freq[normalise(tweet[-1])])
         except IndexError:
             break
-#                word = random.choice(' '.join(history).split(' '))
 
         # Capitalise words on the go
         if tweet[-1][-1] in ('.', '?', '!'):
