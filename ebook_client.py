@@ -99,7 +99,7 @@ def update():
         )
 
         # Filter out some inline RT's
-        page = filter(lambda tweet: 'RT' not in tweet, page)
+        page = filter(lambda tweet: 'RT' not in tweet.text, page)
 
         # Indicates no more history
         if len(page) == 0:
