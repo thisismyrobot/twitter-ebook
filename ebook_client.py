@@ -15,7 +15,7 @@ def tidy(tweet):
     """ Tidy a tweet.
     """
     tweet = tweet.encode('ascii', 'ignore')
-    tweet = ' '.join([re.sub(r'[*"@]', '', word)
+    tweet = ' '.join([re.sub(r'[*"@#]', '', word)
                       for word
                       in tweet.split(' ')
                       if not (word.startswith('http')
