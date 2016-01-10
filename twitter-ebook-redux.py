@@ -96,7 +96,7 @@ def new_tweet(corpus):
 
         # Usually don't denormalise sentence endings.
         if random.random() < 0.8:
-            tweet[i] = re.sub('[,.!?]', '', tweet[i])
+            tweet[i] = re.sub('[,.!?:]$', '', tweet[i])
 
         # Usually remove capitals
         if tweet[i] == tweet[i].capitalize() and random.random() < 0.9:
@@ -119,17 +119,17 @@ def new_tweet(corpus):
 def update(live=False):
     """ Tweet!
     """
+    # Connect.
+    api = twitter.Api(
+        CONSUMER_KEY,
+        CONSUMER_SECRET,
+        ACCESS_TOKEN,
+        ACCESS_TOKEN_SECRET,
+        cache=None,
+    )
+
     history = []
     if live:
-
-        # Connect.
-        api = twitter.Api(
-            CONSUMER_KEY,
-            CONSUMER_SECRET,
-            ACCESS_TOKEN,
-            ACCESS_TOKEN_SECRET,
-            cache=None,
-        )
 
         # Get history from source account.
         max_id = None
