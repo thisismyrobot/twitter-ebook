@@ -90,8 +90,6 @@ def new_tweet(corpus):
 
         stack = stack + new_stack
 
-        print len(stack)
-
     # Denormalise the words
     for i, word in enumerate(tweet):
         tweet[i] = random.choice(normals[word])
@@ -99,6 +97,10 @@ def new_tweet(corpus):
         # Usually don't denormalise sentence endings.
         if random.random() < 0.8:
             tweet[i] = re.sub('[,.!?]', '', tweet[i])
+
+        # Usually remove capitals
+        if tweet[i] == tweet[i].capitalize() and random.random() < 0.9:
+            tweet[i] = tweet[i].lower()
 
     # Sort capitals
     for (i, word) in enumerate(tweet):
