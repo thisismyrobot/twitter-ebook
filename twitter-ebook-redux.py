@@ -41,13 +41,16 @@ def new_tweet(corpus):
     starters = set()
 
     freq = collections.defaultdict(lambda: collections.defaultdict(lambda: 0))
+    normals = collections.defaultdict(list)
 
     # Process the corpus
     for tweet in corpus:
         words = tidy(tweet).split(' ')
         starters.add(normalise(words[0]))
+        normals[normalise(words[0])].append(words[0])
         for (i, word) in enumerate(words[1:], 1):
             freq[normalise(words[i-1])][normalise(word)] += 1
+            normals[normalise(word)].append(word)
 
     start = random.choice(list(starters))
 
@@ -89,9 +92,26 @@ def new_tweet(corpus):
 
         print len(stack)
 
-    tweet[0] = tweet[0].capitalize()
+    # Denormalise the words
+    for i, word in enumerate(tweet):
+        tweet[i] = random.choice(normals[word])
 
-    return '{}.'.format(' '.join(tweet))
+        # Usually don't denormalise sentence endings.
+        if random.random() < 0.8:
+            tweet[i] = re.sub('[,.!?]', '', tweet[i])
+
+    # Sort capitals
+    for (i, word) in enumerate(tweet):
+        if i == 0 or tweet[i-1][-1] in ('.', '?', '!'):
+            tweet[i] = word.capitalize()
+
+    tweet = ' '.join(tweet)
+
+    # Tidy the end
+    tweet = re.sub(r'[,:;]$', '', tweet)
+    tweet = re.sub(r'([^!?.])$', r'\1.', tweet)
+
+    return tweet
 
 
 def update(live=False):
