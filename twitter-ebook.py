@@ -15,15 +15,16 @@ def tidy(tweet):
     """ Tidy a tweet.
     """
     tweet = tweet.encode('ascii', 'ignore')
-    tweet = ' '.join([re.sub(r'[*"@#:()\n\r]', '', word)
+    tweet = ' '.join([re.sub(r'[*"@#()\n\r]', '', word)
                       for word
                       in filter(None, map(str.strip, tweet.split(' ')))
                       if not (word.startswith('http')
                               or word.startswith('@')
                               or word.startswith('.@')
                               or re.sub(r'[\d\w]', '', word) == word)])
-    tweet = ' '.join(filter(None, tweet.split(' ')))
-    return HTMLParser.HTMLParser().unescape(tweet)
+    tweet = HTMLParser.HTMLParser().unescape(tweet)
+    tweet = ' '.join(filter(None, map(str.strip, tweet.split(' '))))
+    return tweet
 
 
 def normalise(word):
@@ -38,21 +39,32 @@ def new_tweet(corpus):
     """
     # Markov it
     starters = set()
+    enders = set()
 
     freq = collections.defaultdict(list)
     for tw in corpus:
-        words = tidy(tw).split(' ')
-        starters.add(words[0])
-        for (i, word) in enumerate(words[1:], 1):
-
-            # Grab any words after full stops, exclamation marks etc as
-            # starters.
-            if words[i-1][-1] in ('.', '!', '?'):
+        words = filter(None, tidy(tw).split(' '))
+        for (i, word) in enumerate(words):
+            if i == 0:
                 starters.add(word)
+            else:
 
-            # This is the magic! The more a word is appended after another the
-            # more likely it will follow it later in our generated sentence.
-            freq[normalise(words[i-1])].append(word)
+                # Grab any words after full stops, exclamation marks etc as
+                # starters.
+                if words[i-1][-1] in ('.', '!', '?'):
+                    starters.add(word)
+
+                # This is the magic! The more a word is appended after another
+                # the more likely it will follow it later in our generated
+                # sentence.
+                freq[normalise(words[i-1])].append(word)
+
+                # This is key to better sentences
+                if i >= 2:
+                    freq[(normalise(words[i-2]), normalise(words[i-1]))].append(word)
+
+            if word[-1] in ('.', '!', '?'):
+                enders.add(normalise(word))
 
     tweet = [random.choice(list(starters)).capitalize()]
 
@@ -61,13 +73,18 @@ def new_tweet(corpus):
 
         # Select the next word
         try:
-            word = random.choice(freq[normalise(tweet[-1])])
+            # Try to match the last two words to a previous sentence
+            word = random.choice(freq[(normalise(tweet[-2]), normalise(tweet[-1]))])
         except IndexError:
-            break
+            try:
+                # Try to match the last word to a previous sentence
+                word = random.choice(freq[normalise(tweet[-1])])
+            except IndexError:
+                return new_tweet(corpus)
 
         # Don't repeat words close together
         if normalise(word) in added[-5:]:
-            break
+            return new_tweet(corpus)
 
         added.append(normalise(word))
 
@@ -75,12 +92,15 @@ def new_tweet(corpus):
         if tweet[-1][-1] in ('.', '?', '!'):
             word = word.capitalize()
 
+        if len(tweet) > random.randint(3, 30) and normalise(word) in enders:
+            break
+
         try:
 
             tweet.append(word)
 
             # Exit if over chosen tweet length
-            assert len(' '.join(tweet)) <= random.randint(70, 139)
+            assert len(' '.join(tweet)) <= random.randint(110, 139)
 
         # Indicates we've made a long enough tweet or reached a full stop.
         except AssertionError:
@@ -89,7 +109,7 @@ def new_tweet(corpus):
     tweet = ' '.join(tweet)
 
     # Fix up the ending
-    tweet = re.sub(r'[,:]$', '', tweet)
+    tweet = re.sub(r'[,:;]$', '', tweet)
     tweet = re.sub(r'([^!?.])$', r'\1.', tweet)
 
     return tweet
