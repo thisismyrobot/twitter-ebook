@@ -23,7 +23,7 @@ def tidy(tweet):
                               or word.startswith('.@')
                               or re.sub(r'[\d\w]', '', word) == word)])
     tweet = HTMLParser.HTMLParser().unescape(tweet)
-    tweet = ' '.join(filter(None, map(str.strip, tweet.split(' '))))
+    tweet = ' '.join(filter(None, map(str.strip, str(tweet).split(' '))))
     return tweet
 
 
