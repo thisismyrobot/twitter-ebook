@@ -118,17 +118,17 @@ def new_tweet(corpus):
 def update(live=False):
     """ Tweet!
     """
+    # Connect.
+    api = twitter.Api(
+        CONSUMER_KEY,
+        CONSUMER_SECRET,
+        ACCESS_TOKEN,
+        ACCESS_TOKEN_SECRET,
+        cache=None,
+    )
+
     history = []
     if live:
-
-        # Connect.
-        api = twitter.Api(
-            CONSUMER_KEY,
-            CONSUMER_SECRET,
-            ACCESS_TOKEN,
-            ACCESS_TOKEN_SECRET,
-            cache=None,
-        )
 
         # Get history from source account.
         max_id = None
