@@ -163,7 +163,7 @@ def update(live=False):
     print tweet
 
     # Post away!
-    #api.PostUpdate(tweet)
+    api.PostUpdate(tweet)
 
 
 if __name__ == '__main__':
