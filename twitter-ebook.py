@@ -21,7 +21,7 @@ def tidy(tweet):
                       if not (word.startswith('http')
                               or word.startswith('@')
                               or word.startswith('.@')
-                              or re.sub(r'[\d\w]', '', word) == word)])
+                              or normalise(word) == '')])
     tweet = HTMLParser.HTMLParser().unescape(tweet)
     tweet = ' '.join(filter(None, map(str.strip, str(tweet).split(' '))))
     return tweet
@@ -30,6 +30,7 @@ def tidy(tweet):
 def normalise(word):
     """ Normalise a word for frequency lookups.
     """
+    # Remove anything except a-z.
     word = re.sub(r'[^\w]', '', word)
     return word.lower()
 
@@ -37,78 +38,78 @@ def normalise(word):
 def new_tweet(corpus):
     """ Produce a sentence from a corpus (list of sentences).
     """
-    # Markov it
     starters = set()
-    enders = set()
 
-    freq = collections.defaultdict(list)
-    for tw in corpus:
-        words = filter(None, tidy(tw).split(' '))
-        for (i, word) in enumerate(words):
-            if i == 0:
-                starters.add(word)
-            else:
+    freq = collections.defaultdict(lambda: collections.defaultdict(lambda: 0))
+    normals = collections.defaultdict(list)
 
-                # Grab any words after full stops, exclamation marks etc as
-                # starters.
-                if words[i-1][-1] in ('.', '!', '?'):
-                    starters.add(word)
+    # Process the corpus
+    for tweet in corpus:
+        words = tidy(tweet).split(' ')
+        starters.add(normalise(words[0]))
+        normals[normalise(words[0])].append(words[0])
+        for (i, word) in enumerate(words[1:], 1):
+            freq[normalise(words[i-1])][normalise(word)] += 1
+            normals[normalise(word)].append(word)
 
-                # This is the magic! The more a word is appended after another
-                # the more likely it will follow it later in our generated
-                # sentence.
-                freq[normalise(words[i-1])].append(word)
+    start = random.choice(list(starters))
 
-                # This is key to better sentences
-                if i >= 2:
-                    freq[(normalise(words[i-2]), normalise(words[i-1]))].append(word)
+    stack = [(0, [start,])]
+    seen = set()
 
-            if word[-1] in ('.', '!', '?'):
-                enders.add(normalise(word))
-
-    tweet = [random.choice(list(starters)).capitalize()]
-
-    added = [normalise(tweet[0])]
+    tweet = None
     while True:
 
-        # Select the next word
-        try:
-            # Try to match the last two words to a previous sentence
-            word = random.choice(freq[(normalise(tweet[-2]), normalise(tweet[-1]))])
-        except IndexError:
-            try:
-                # Try to match the last word to a previous sentence
-                word = random.choice(freq[normalise(tweet[-1])])
-            except IndexError:
-                return new_tweet(corpus)
+        # Delete all but the highest n weighted items on the stack
+        n = 10000
+        stack = sorted(stack[-n:])
 
-        # Don't repeat words close together
-        if normalise(word) in added[-5:]:
-            return new_tweet(corpus)
+        new_stack = []
 
-        added.append(normalise(word))
+        for (weight, items) in stack:
 
-        # Capitalise words on the go
-        if tweet[-1][-1] in ('.', '?', '!'):
-            word = word.capitalize()
+            last = items[-1]
 
-        if len(tweet) > random.randint(3, 30) and normalise(word) in enders:
+            for (con, i_weight) in freq[last].items():
+                if con in seen:
+                    continue
+
+                seen.add(con)
+
+                new_stack.append(
+                    (
+                        (weight + i_weight) * (random.random() + 0.5),
+                        items + [con]
+                    )
+                )
+
+        # Detect stability
+        if new_stack == []:
+            tweet = sorted(stack)[-1][1]
             break
 
-        try:
+        stack = stack + new_stack
 
-            tweet.append(word)
+    # Denormalise the words
+    for i, word in enumerate(tweet):
+        tweet[i] = random.choice(normals[word])
 
-            # Exit if over chosen tweet length
-            assert len(' '.join(tweet)) <= random.randint(110, 139)
+        # Usually don't denormalise sentence endings.
+        if random.random() < 0.8:
+            tweet[i] = re.sub('[,.!?:]$', '', tweet[i])
 
-        # Indicates we've made a long enough tweet or reached a full stop.
-        except AssertionError:
-            break
+        # Usually remove capitals
+        if tweet[i] == tweet[i].capitalize() and random.random() < 0.9:
+            tweet[i] = tweet[i].lower()
+
+    # Sort capitals
+    for (i, word) in enumerate(tweet):
+        if i == 0 or tweet[i-1][-1] in ('.', '?', '!'):
+            tweet[i] = word.capitalize()
 
     tweet = ' '.join(tweet)
 
-    # Fix up the ending
+    # Tidy the end
     tweet = re.sub(r'[,:;]$', '', tweet)
     tweet = re.sub(r'([^!?.])$', r'\1.', tweet)
 
