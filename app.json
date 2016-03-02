@@ -1,0 +1,10 @@
+{
+  "name": "thisisyourrobot",
+  "description": "Twitter ebook",
+  "website": "twitter.com/thisisyourrobot",
+  "image": "heroku/python",
+  "repository": "https://github.com/thisismyrobot/twitter-ebook",
+  "keywords": [
+    "python", "twitter", "ebook", "thisismyrobot"
+  ],
+}
