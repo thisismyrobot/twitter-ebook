@@ -1,43 +1,16 @@
-""" eBook engine.
-"""
-from settings import *
-
+"""eBook engine."""
 import collections
-import HTMLParser
 import json
-import operator
 import random
 import re
 import twitter
 
-
-def tidy(tweet):
-    """ Tidy a tweet.
-    """
-    tweet = tweet.encode('ascii', 'ignore')
-    tweet = ' '.join([re.sub(r'[*"@#()\n\r]', '', word)
-                      for word
-                      in filter(None, map(str.strip, tweet.split(' ')))
-                      if not (word.startswith('http')
-                              or word.startswith('@')
-                              or word.startswith('.@')
-                              or normalise(word) == '')])
-    tweet = HTMLParser.HTMLParser().unescape(tweet)
-    tweet = ' '.join(filter(None, map(str.strip, str(tweet).split(' '))))
-    return tweet
-
-
-def normalise(word):
-    """ Normalise a word for frequency lookups.
-    """
-    # Remove anything except a-z.
-    word = re.sub(r'[^\w]', '', word)
-    return word.lower()
+import settings
+from tools import normalise, tidy
 
 
 def new_tweet(corpus):
-    """ Produce a sentence from a corpus (list of sentences).
-    """
+    """Produce a sentence from a corpus (list of sentences)."""
     starters = set()
 
     freq = collections.defaultdict(lambda: collections.defaultdict(lambda: 0))
@@ -116,55 +89,27 @@ def new_tweet(corpus):
     return tweet
 
 
-def update(live=False):
-    """ Tweet!
-    """
+def update():
+    """Tweet!"""
     # Connect.
     api = twitter.Api(
-        CONSUMER_KEY,
-        CONSUMER_SECRET,
-        ACCESS_TOKEN,
-        ACCESS_TOKEN_SECRET,
+        settings.CONSUMER_KEY,
+        settings.CONSUMER_SECRET,
+        settings.ACCESS_TOKEN,
+        settings.ACCESS_TOKEN_SECRET,
         cache=None,
     )
 
-    history = []
-    if live:
-
-        # Get history from source account.
-        max_id = None
-        while True:
-            page = api.GetUserTimeline(
-                screen_name=SOURCE_ACCOUNT, max_id=max_id, count=200,
-                include_rts=False, trim_user=True, exclude_replies=True
-            )
-
-            # Filter out some inline RT's
-            page = filter(lambda tweet: 'RT' not in tweet.text, page)
-
-            # Indicates no more history
-            if len(page) == 0:
-                break
-
-            max_id = page[-1].id
-            history.extend(map(tidy, map(operator.attrgetter('text'), page)))
-
-        # Remove duplicates and empty (after tidying) tweets
-        history = filter(None, list(set(history)))
-
-        with open('history.txt', 'wb') as hf:
-            hf.write(json.dumps({'history': history}, indent=2, sort_keys=True))
-
-    else:
-        with open('history.txt', 'rb') as hf:
-            history = json.loads(hf.read())['history']
+    with open('history.txt', 'rb') as hf:
+        history = json.loads(hf.read())['history']
 
     tweet = new_tweet(history)
-    print tweet
 
     # Post away!
-    api.PostUpdate(tweet)
+    #api.PostUpdate(tweet)
+
+    return tweet
 
 
 if __name__ == '__main__':
-    update()
+    print update()
