@@ -6,7 +6,6 @@ import random
 import re
 import twitter
 
-import history
 from tools import normalise, tidy
 
 
@@ -92,8 +91,6 @@ def new_tweet(corpus):
 
 def update():
     """Tweet!"""
-    tweet = new_tweet(json.loads(history.HISTORY)['history'])
-
     # Connect.
     api = twitter.Api(
         os.environ['CONSUMER_KEY'],
@@ -102,6 +99,11 @@ def update():
         os.environ['ACCESS_TOKEN_SECRET'],
         cache=None,
     )
+
+    with open('history.txt', 'rb') as hf:
+        history = json.loads(hf.read())['history']
+
+    tweet = new_tweet(history)
 
     # Post away!
     #api.PostUpdate(tweet)
