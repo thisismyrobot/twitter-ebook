@@ -9,5 +9,5 @@ This one's occasionally running at
 
 ## Setup
 
-You'll need to set the four tokens in settings.py and the account name to use
-for source data.
+You'll need to set the four tokens and the account name to use for source data
+as environment variables.

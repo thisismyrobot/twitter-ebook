@@ -1,11 +1,11 @@
 """eBook engine."""
 import collections
 import json
+import os
 import random
 import re
 import twitter
 
-import settings
 from tools import normalise, tidy
 
 
@@ -93,10 +93,10 @@ def update():
     """Tweet!"""
     # Connect.
     api = twitter.Api(
-        settings.CONSUMER_KEY,
-        settings.CONSUMER_SECRET,
-        settings.ACCESS_TOKEN,
-        settings.ACCESS_TOKEN_SECRET,
+        os.environ['CONSUMER_KEY'],
+        os.environ['CONSUMER_SECRET'],
+        os.environ['ACCESS_TOKEN'],
+        os.environ['ACCESS_TOKEN_SECRET'],
         cache=None,
     )
 

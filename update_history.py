@@ -1,19 +1,19 @@
 """Update history.txt from a user's tweets."""
 import json
 import operator
+import os
 import twitter
 
 import tools
-import settings
 
 
 if __name__ == '__main__':
     # Connect.
     api = twitter.Api(
-        settings.CONSUMER_KEY,
-        settings.CONSUMER_SECRET,
-        settings.ACCESS_TOKEN,
-        settings.ACCESS_TOKEN_SECRET,
+        os.environ['CONSUMER_KEY'],
+        os.environ['CONSUMER_SECRET'],
+        os.environ['ACCESS_TOKEN'],
+        os.environ['ACCESS_TOKEN_SECRET'],
         cache=None,
     )
 
@@ -21,7 +21,7 @@ if __name__ == '__main__':
     max_id = None
     while True:
         page = api.GetUserTimeline(
-            screen_name=settings.SOURCE_ACCOUNT, max_id=max_id, count=200,
+            screen_name=os.environ['SOURCE_ACCOUNT'], max_id=max_id, count=200,
             include_rts=False, trim_user=True, exclude_replies=True
         )
 
