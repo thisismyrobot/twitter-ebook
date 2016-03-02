@@ -38,5 +38,7 @@ if __name__ == '__main__':
     # Remove duplicates and empty (after tidying) tweets
     history = filter(None, list(set(history)))
 
-    with open('history.txt', 'wb') as hf:
+    with open('history.py', 'wb') as hf:
+        hf.write('HISTORY = """\n')
         hf.write(json.dumps({'history': history}, indent=2, sort_keys=True))
+        hf.write('\n"""')
