@@ -2,22 +2,6 @@
 import brains
 
 
-def test_join_weights():
-    """Words in a sentence get weights attached for joins."""
-
-    tweet = 'Hello, how\'re you going this fine day'
-
-    assert brains.join_weights(tweet) == [
-        ('Hello,', 0),
-        ('how\'re', 6),
-        ('you', 6),
-        ('going', 15),
-        ('this', 8),
-        ('fine', 4),
-        ('day', 0),
-    ]
-
-
 def test_normalise_corpus():
     """Test we can normalise a corpus."""
     corpus = [
@@ -48,4 +32,34 @@ def test_normalise_corpus():
         'im': ['I\'m'],
         'thanks': ['thanks.'],
         'you': ['you?'],
+    }
+
+
+def test_bisect():
+    """We create the splits using the middle of sentences."""
+    corpus = [
+        'Every roadtrip needs someone to tell them to slow down in the corners :)',
+        'looking forward to F1 tomorrow night - should be super tight at the top!',
+    ]
+
+    normalised_sentences = brains.normalise_corpus(corpus)[0]
+
+    starts, ends = brains.bisect(normalised_sentences, min_occurances=1)
+
+    assert starts == {
+        'be': [['looking', 'forward', 'to', 'f1', 'tomorrow', 'night', 'should']],
+        'night': [['looking', 'forward', 'to', 'f1', 'tomorrow']],
+        'should': [['looking', 'forward', 'to', 'f1', 'tomorrow', 'night']],
+        'tell': [['every', 'roadtrip', 'needs', 'someone', 'to']],
+        'them': [['every', 'roadtrip', 'needs', 'someone', 'to', 'tell']],
+        'to': [['every', 'roadtrip', 'needs', 'someone', 'to', 'tell', 'them']],
+    }
+
+    assert ends == {
+        'be': [['super', 'tight', 'at', 'the', 'top']],
+        'night': [['should', 'be', 'super', 'tight', 'at', 'the', 'top']],
+        'should': [['be', 'super', 'tight', 'at', 'the', 'top']],
+        'tell': [['them', 'to', 'slow', 'down', 'in', 'the', 'corners']],
+        'them': [['to', 'slow', 'down', 'in', 'the', 'corners']],
+        'to': [['slow', 'down', 'in', 'the', 'corners']],
     }

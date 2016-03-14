@@ -14,18 +14,33 @@ def normalise(word):
 
 def tidy(tweet):
     """Tidy a tweet."""
-    tweet = tweet.encode('ascii', 'ignore')
-    tweet = ' '.join([re.sub(r'[*"@#()\n\r]', '', word)
-                      for word
-                      in filter(None, map(str.strip, tweet.split(' ')))
-                      if not (word.startswith('http')
-                              or word.startswith('@')
-                              or word.startswith('.@')
-                              or word.startswith('#')
-                              or normalise(word) == '')])
+    # Ensure it's unicode
+    tweet = unicode(tweet)
+
+    # Convert HTML characters to unicode.
     tweet = HTMLParser.HTMLParser().unescape(tweet)
-    tweet = ' '.join(filter(None, map(str.strip, str(tweet).split(' '))))
-    return tweet
+
+    # Remove unicode characters - original or from HTML.
+    tweet = tweet.encode('ascii', 'ignore')
+
+    # Strip basic characters
+    tweet = re.sub(r'[*"()\n\r\t]', '', tweet)
+
+    # Filter certain words
+    tweet = ' '.join([word
+                      for word
+                      in tweet.split(' ')
+                      if not(word.startswith('http')
+                             or word.startswith('#')
+                             or word.startswith('.@')
+                             or word.startswith('@')
+                             or normalise(word) == '')])
+
+    # Remaining characters to strip
+    tweet = re.sub(r'[#@]', '', tweet)
+
+    # Re-apply uniform spacing
+    return ' '.join(filter(None, map(string.strip, tweet.split(' '))))
 
 
 def sentences(tweet):

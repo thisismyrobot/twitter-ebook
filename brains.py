@@ -6,19 +6,6 @@ import re
 import tools
 
 
-def join_weights(sentence):
-    """Return how good each word in a sentence is for joins.
-
-    Higher = better.
-    """
-    weights = []
-    words = sentence.split(' ')
-    for (i, word) in enumerate(words):
-        weight = min(i, len(words) - i - 1) * len(word)
-        weights.append((word, weight))
-    return weights
-
-
 def normalise_corpus(corpus):
     """Normalise the corpus, returning it a normals map.
 
@@ -41,57 +28,42 @@ def normalise_corpus(corpus):
     return normalised_corpus, normals_map
 
 
-def join_pool(normalised_corpus, word_count, min_occurances=10):
-    """Return a pool of joiners, weighted so the better ones appear more
-    often.
+def bisect(sentences, min_length=5, min_occurances=5):
+    """Return a list of the second halves of sentences."""
+    starts = collections.defaultdict(list)
+    ends = collections.defaultdict(list)
+    for sentence in sentences:
+        words = sentence.split(' ')
+        if len(words) < min_length:
+            continue
+        i = (len(words) // 2)  # + random.randint(-1, 1)
+        starts[words[i]].append(words[:i])
+        starts[words[i-1]].append(words[:i-1])
+        starts[words[i+1]].append(words[:i+1])
+        ends[words[i]].append(words[i+1:])
+        ends[words[i-1]].append(words[i:])
+        ends[words[i+1]].append(words[i+2:])
 
-    Expects a normalised corpus.
-    """
-    join_values = collections.defaultdict(float)
-    for sentence in normalised_corpus:
-        for (word, weight) in join_weights(sentence):
-            if word_count[word] < min_occurances:
-                continue
-            corpus_weight = weight / float(word_count[word])
-            join_values[word] += corpus_weight
+    for (word, start) in starts.items():
+        if len(start) < min_occurances:
+            del starts[word]
 
-    join_pool = []
-    for (word, weight) in join_values.items():
-        join_pool.extend([word] * int(weight))
+    for (word, end) in ends.items():
+        if len(end) < min_occurances:
+            del ends[word]
 
-    return join_pool
+    return starts, ends
 
 
 def new_tweet(corpus):
     """Produce a new sentence from a corpus (list of sentences)."""
-
-    # Normalise the corpus and create a normalised word map.
     normalised_corpus, normal_map = normalise_corpus(corpus)
 
-    # Work out a count of every word
-    word_count = dict([(word, len(normal_map[word]))
-                       for word
-                       in normal_map.keys()])
+    starts, ends = bisect(normalised_corpus)
 
-    # Create a weighted pool of words to join on.
-    pool = join_pool(normalised_corpus, word_count)
+    joiner = random.choice(starts.keys() + ends.keys())
 
-    # Determine the chosen joining word.
-    joiner = random.choice(pool)
-
-    # Select sentences containing the joining word
-    sentence_candidates = []
-    for sentence in normalised_corpus:
-        if joiner in sentence.split(' ')[1:-1]:
-            sentence_candidates.append(sentence)
-
-    sentences = random.sample(sentence_candidates, 2)
-
-    tweet = (
-        sentences[0].split(joiner)[0].strip().split(' ') +
-        [joiner] +
-        sentences[1].split(joiner)[-1].strip().split(' ')
-    )
+    tweet = random.choice(starts[joiner]) + [joiner] + random.choice(ends[joiner])
 
     # Denormalise the words
     for i, word in enumerate(tweet):

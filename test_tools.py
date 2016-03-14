@@ -29,3 +29,10 @@ def test_corpus_to_sentences():
         'beer',
         'Gone fishing',
     ]
+
+
+def test_tidy():
+    """We remove things from tweets in history."""
+    assert tools.tidy(
+        u'.@whoever Every  (roadtrip) \r\nneeds &copy;\tsomeone \xa9 "for" corners :-) #blah # tag cc @whoever2 http://t.co/blah :P',
+    ) == 'Every roadtrip needs someone for corners tag cc :P'
