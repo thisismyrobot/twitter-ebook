@@ -8,11 +8,44 @@ def test_join_weights():
     tweet = 'Hello, how\'re you going this fine day'
 
     assert brains.join_weights(tweet) == [
-        ('hello', 0),
-        ('howre', 5),
+        ('Hello,', 0),
+        ('how\'re', 6),
         ('you', 6),
         ('going', 15),
         ('this', 8),
         ('fine', 4),
         ('day', 0),
     ]
+
+
+def test_normalise_corpus():
+    """Test we can normalise a corpus."""
+    corpus = [
+        'Hello, how\'re you?',
+        'I\'m good, thanks.',
+        'Good.',
+        'beer',
+        'Gone fishing?',
+    ]
+
+    normalised, norm_map = brains.normalise_corpus(corpus)
+
+    assert normalised == [
+        'hello howre you',
+        'im good thanks',
+        'good',
+        'beer',
+        'gone fishing',
+    ]
+
+    assert norm_map == {
+        'beer': ['beer'],
+        'fishing': ['fishing?'],
+        'gone': ['Gone'],
+        'good': ['good,', 'Good.'],
+        'hello': ['Hello,'],
+        'howre': ['how\'re'],
+        'im': ['I\'m'],
+        'thanks': ['thanks.'],
+        'you': ['you?'],
+    }
