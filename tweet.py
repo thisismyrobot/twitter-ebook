@@ -1,6 +1,7 @@
 """eBook engine."""
 import json
 import os
+import time
 import twitter
 
 import tools
@@ -21,8 +22,6 @@ def update():
         if len(tweet) <= 140:
             break
 
-    return tweet
-
     # Connect.
     api = twitter.Api(
         os.environ['CONSUMER_KEY'],
@@ -33,6 +32,8 @@ def update():
     )
     # Post away!
     api.PostUpdate(tweet)
+
+    time.sleep(12 * 60 * 60)
 
     return tweet
 
