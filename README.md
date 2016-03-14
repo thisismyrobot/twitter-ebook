@@ -11,3 +11,7 @@ This one's occasionally running at
 
 You'll need to set the four tokens and the account name to use for source data
 as environment variables.
+
+## Tests
+
+py.test
