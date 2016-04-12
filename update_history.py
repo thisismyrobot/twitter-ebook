@@ -36,7 +36,7 @@ if __name__ == '__main__':
         history.extend(map(tools.tidy, map(operator.attrgetter('text'), page)))
 
     # Remove duplicates and empty (after tidying) tweets
-    history = filter(None, list(set(history)))
+    history = sorted(filter(None, list(set(history))))
 
     with open('history.txt', 'wb') as hf:
         hf.write(json.dumps({'history': history}, indent=2, sort_keys=True))
