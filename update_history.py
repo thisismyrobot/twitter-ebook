@@ -18,6 +18,10 @@ if __name__ == '__main__':
     )
 
     history = []
+    with open('hitchhikers.txt', 'rb') as hitchf:
+        for line in hitchf:
+            history.append(tools.tidy(line))
+
     max_id = None
     while True:
         page = api.GetUserTimeline(
